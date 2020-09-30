@@ -72,21 +72,16 @@ func EncodeRowKeyWithHandle(tableID int64, handle int64) kv.Key {
 // DecodeRecordKey decodes the key and gets the tableID, handle.
 func DecodeRecordKey(key kv.Key) (tableID int64, handle int64, err error) {
 	/* Your code here */
-	if len(key) != RecordRowKeyLen {
+	if len(key) == 0 || !hasTablePrefix(key) || len(key) != RecordRowKeyLen {
 		return 0, 0, errors.Errorf("DecodeRecordKey error: invalid key length:%d", len(key))
 	}
-	buf := []byte(key)
-	// check tablePrefix is valid
-	if !bytes.Equal(buf[0:tablePrefixLength], tablePrefix) {
-		return 0, 0, errors.Errorf("DecodeRecordKey error: invalid key table prefix:%s", key.String())
-	} else if buf, tableID, err = codec.DecodeInt(buf[tablePrefixLength:]); err != nil {
-		return 0, 0, errors.Errorf("DecodeRecordKey error: invalid table id:%s", key.String())
+	// decode TableID
+	if tableID = DecodeTableID(key); tableID == 0 {
+		return 0, 0, errors.Errorf("DecodeRecordKey error: invalid tableID. key:%s", key.String())
 	}
-	// check recordPrefix is valid
-	if !bytes.Equal(buf[0:recordPrefixSepLength], recordPrefixSep) {
-		return 0, 0, errors.Errorf("DecodeRecordKey error: invalid key record prefix:%s", key.String())
-	} else if buf, handle, err = codec.DecodeInt(buf[recordPrefixSepLength:]); err != nil {
-		return 0, 0, errors.Errorf("DecodeRecordKey error: invalid handle:%s", key.String())
+	// decode handle
+	if _, handle, err = codec.DecodeInt(CutRowKeyPrefix(key)); err != nil {
+		return 0, 0, errors.Errorf("DecodeRecordKey error: invalid handle. key:%s", key.String())
 	}
 	return
 }
@@ -111,6 +106,21 @@ func EncodeIndexSeekKey(tableID int64, idxID int64, encodedValue []byte) kv.Key 
 // DecodeIndexKeyPrefix decodes the key and gets the tableID, indexID, indexValues.
 func DecodeIndexKeyPrefix(key kv.Key) (tableID int64, indexID int64, indexValues []byte, err error) {
 	/* Your code here */
+	if len(key) == 0 || !IsIndexKey(key) {
+		return 0, 0, nil, errors.Errorf("DecodeIndexKeyPrefix error: invalid key format. key:%s", key.String())
+	}
+	// decode tableID
+	if tableID = DecodeTableID(key); tableID == 0 {
+		return 0, 0, nil, errors.Errorf("DecodeIndexKeyPrefix error: invalid tableID. key:%s", key.String())
+	}
+	// decode indexID
+	if _, indexID, err = codec.DecodeInt(CutRowKeyPrefix(key)); err != nil {
+		return 0, 0, nil, errors.Errorf("DecodeIndexKeyPrefix error: invalid indexID. key:%s", key.String())
+	}
+	// decode indexValues
+	if indexValues = CutIndexPrefix(key); indexValues == nil {
+		return 0, 0, nil, errors.Errorf("DecodeIndexKeyPrefix error: invalid indexValues. key:%s", key.String())
+	}
 	return tableID, indexID, indexValues, nil
 }
 
