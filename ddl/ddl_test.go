@@ -101,11 +101,10 @@ func TestT(t *testing.T) {
 
 	testleak.BeforeTest()
 	//TestingT(t)
-	//Run(testDropColumn, &RunConf{})
-	//Run(&testColumnChangeSuite{}, &RunConf{
-	//	Benchmark: false,
-	//	Filter:    "TestColumnChange",
-	//})
+	Run(&testColumnChangeSuite{}, &RunConf{
+		Benchmark: false,
+		Filter:    "TestColumnChange",
+	})
 	Run(&testColumnSuite{}, &RunConf{
 		Benchmark: false,
 		Filter:    "TestDropColumn",

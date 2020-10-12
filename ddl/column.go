@@ -230,8 +230,8 @@ func onDropColumn(t *meta.Meta, job *model.Job) (ver int64, _ error) {
 		ver, err = updateVersionAndTableInfo(t, job, tblInfo, originalState != colInfo.State)
 	case model.StateDeleteOnly:
 		// To be filled
-		job.SchemaState = model.StateDeleteOnly
-		colInfo.State = model.StateDeleteOnly
+		job.SchemaState = model.StateWriteOnly
+		colInfo.State = model.StateWriteOnly
 		ver, err = updateVersionAndTableInfo(t, job, tblInfo, originalState != colInfo.State)
 	case model.StateDeleteReorganization:
 		adjustColumnInfoInDropColumn(tblInfo, colInfo.Offset)
