@@ -100,7 +100,16 @@ func TestT(t *testing.T) {
 	config.StoreGlobalConfig(&newCfg)
 
 	testleak.BeforeTest()
-	TestingT(t)
+	//TestingT(t)
+	//Run(testDropColumn, &RunConf{})
+	//Run(&testColumnChangeSuite{}, &RunConf{
+	//	Benchmark: false,
+	//	Filter:    "TestColumnChange",
+	//})
+	Run(&testColumnSuite{}, &RunConf{
+		Benchmark: false,
+		Filter:    "TestDropColumn",
+	})
 	testleak.AfterTestT(t)()
 }
 
